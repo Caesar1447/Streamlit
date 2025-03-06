@@ -18,16 +18,28 @@ st.sidebar.title("Navigation")
 page = st.sidebar.radio("Select a Page", ["📊 KPI Dashboard", "📈 Data Exploration", "🚀 Predictive Modeling & Anomaly Detection"])
 
 # Upload File
-uploaded_file = st.file_uploader("Upload an Excel file", type=["xlsx"])
+uploaded_file = st.file_uploader("Upload a dataset (CSV or Excel)", type=["csv", "xlsx"])
 
 def load_data(uploaded_file):
-    if uploaded_file:
-        df = pd.read_excel(uploaded_file, sheet_name="Dataset")
-        return df
-    return None
+    if uploaded_file is not None:
+        file_extension = uploaded_file.name.split(".")[-1]  # Get file extension
+        if file_extension == "csv":
+            df = pd.read_csv(uploaded_file)
+        elif file_extension == "xlsx":
+            df = pd.read_excel(uploaded_file, sheet_name="Dataset")
+        else:
+            st.error("Unsupported file format. Please upload a CSV or Excel file.")
+            return None
+    else:
+        st.warning("No file uploaded. Loading default dataset...")
+        df = pd.read_excel("Breast Cancer_Analysis_Dashboard.xlsx", sheet_name="Dataset")  # Ensure this file exists
+    return df
 
 df = load_data(uploaded_file)
 
+# Show dataset preview
+if df is not None:
+    st.write("Dataset Preview:", df.head())
 if page == "📊 KPI Dashboard":
     st.title("📊 KPI Dashboard - Cancer Diagnosis")
     if df is not None:
@@ -157,3 +169,8 @@ elif page == "🚀 Predictive Modeling & Anomaly Detection":
             st.warning("Diagnosis column missing. Ensure dataset includes a target variable for predictions.")
 
 st.success("✅ AI-Powered Cancer Dashboard Ready!")
+
+
+
+
+                                                                                   
