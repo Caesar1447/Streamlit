@@ -46,14 +46,52 @@ if page == "📊 KPI Dashboard":
         st.subheader("Dataset Preview")
         st.dataframe(df.head())
         
-        # KPI Analysis
+                # KPI Analysis
         st.subheader("📈 Time Trends (Line Chart)")
-        if "Date" in df.columns:
-            df["Date"] = pd.to_datetime(df["Date"])
-            time_trend = df.groupby(df["Date"].dt.to_period("M")).size()
-            st.line_chart(time_trend)
+        if "date" in df.columns:
+            df["date"] = pd.to_datetime(df["date"])
+            df = df.sort_values("date")
+
+            st.markdown("### 📅 KPI Time Trends")
+
+            # Optional filters
+            with st.expander("🔍 Add Filters (Optional)", expanded=False):
+                gender_filter = st.multiselect("Filter by Gender", df["Gender"].dropna().unique())
+                ethnicity_filter = st.multiselect("Filter by Ethnicity", df["Ethnicity"].dropna().unique())
+
+            filtered_df = df.copy()
+            if gender_filter:
+                filtered_df = filtered_df[filtered_df["Gender"].isin(gender_filter)]
+            if ethnicity_filter:
+                filtered_df = filtered_df[filtered_df["Ethnicity"].isin(ethnicity_filter)]
+
+            # KPI Selection
+            kpi_options = filtered_df.select_dtypes(include=[np.number]).columns.tolist()
+            default_kpi = ["Survival_Years"] if "Survival_Years" in kpi_options else kpi_options[:1]
+            selected_kpis = st.multiselect("Select KPI(s) to track over time", kpi_options, default=default_kpi)
+
+            if selected_kpis:
+                df_trend = filtered_df.set_index("date").resample("M")[selected_kpis].mean().dropna()
+
+                # Line chart
+                st.line_chart(df_trend)
+
+                # Export as Excel
+                trend_output = io.BytesIO()
+                with pd.ExcelWriter(trend_output, engine="xlsxwriter") as writer:
+                    df_trend.to_excel(writer, sheet_name="Time_Trends")
+                trend_output.seek(0)
+
+                st.download_button(
+                    label="📥 Download Time Trend (Excel)",
+                    data=trend_output,
+                    file_name="KPI_Time_Trend.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+            else:
+                st.info("Please select at least one KPI to display.")
         else:
-            st.warning("Date column not found. Ensure dataset includes a time variable.")
+            st.warning("`date` column not found. Please ensure your dataset has a parsed time variable.")
 
         # Pie Chart - Demographic Breakdown
         st.subheader("📊 Demographic Breakdown")
@@ -145,10 +183,17 @@ elif page == "🚀 Predictive Modeling & Anomaly Detection":
             le = LabelEncoder()
             df_encoded[col] = le.fit_transform(df[col].astype(str))
             label_encoders[col] = le
+                # Convert date column to useful numeric features
+    if "date" in df_encoded.columns:
+        df_encoded["Year"] = pd.to_datetime(df_encoded["date"]).dt.year
+        df_encoded["Month"] = pd.to_datetime(df_encoded["date"]).dt.month
+        # Optionally: df_encoded["DayOfYear"] = pd.to_datetime(df_encoded["date"]).dt.dayofyear
+
         
         # Train-Test Split
         if "Diagnosis" in df_encoded.columns:
-            X = df_encoded.drop(columns=["Diagnosis"])
+            drop_cols = ["Diagnosis", "date"]  # Exclude raw datetime
+            X = df_encoded.drop(columns=drop_cols)
             y = df_encoded["Diagnosis"]
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
             
