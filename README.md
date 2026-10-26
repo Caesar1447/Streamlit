@@ -2,17 +2,19 @@
 
 **An educational data analytics and machine learning application demonstrating end-to-end software engineering, model evaluation, and deployment practices.**
 
-> **Research and portfolio demonstration only.** This application is not a medical device and must not be used for diagnosis, clinical decision-making, or assessment of an individual's cancer risk. The currently bundled datasets are synthetic; reported performance on these datasets does not establish clinical validity.
+> **Research and portfolio demonstration only.** This application is not a medical device and must not be used for diagnosis, clinical decision-making, or assessment of an individual's cancer risk. The default dashboard data is synthetic. A separate UCI historical research benchmark is also available. Performance in either mode does not establish clinical validity.
 
 ## Overview
 
 The platform combines an interactive Streamlit dashboard with modular Python data-processing and machine-learning components. It is designed to demonstrate practical data ingestion, exploratory analysis, classification workflows, anomaly detection, reproducibility, and engineering documentation.
 
-The application currently includes three sections:
+The **Synthetic demo** dataset mode includes three sections:
 
 - **KPI Dashboard:** Explore record counts, missing values, categorical distributions, and time trends when relevant fields are available.
 - **Data Exploration:** Review descriptive statistics and visualize relationships in the dataset.
 - **Predictive Modeling & Anomaly Detection:** Train and evaluate a Random Forest classifier on appropriately structured **synthetic** data, inspect evaluation metrics and feature importance, and flag unusual feature patterns using Isolation Forest.
+
+The **UCI Wisconsin Diagnostic benchmark** mode independently evaluates benign/malignant classification on 569 historical breast-mass aspirate samples with 30 measurements. It does not share features, labels, or model artifacts with the synthetic demo. See [the original UCI repository](https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic) (DOI: 10.24432/C5DW2B; CC BY 4.0). The data is included with scikit-learn, requiring no runtime dataset download.
 
 The project also includes a local demonstration API, automated tests, and container configuration. These are engineering examples, not evidence of clinical approval or production security.
 
@@ -27,7 +29,7 @@ The project also includes a local demonstration API, automated tests, and contai
 
 ## Data and model methodology
 
-- The default data supplied with the project is **synthetically generated** for demonstration.
+- The default demo data supplied with the project is **synthetically generated** for demonstration.
 - The dashboard accepts CSV and Excel uploads intended for **synthetic demonstration datasets only**. Do not upload identifiable patient records or sensitive health information.
 - For the synthetic classification task, selected predictors are declared in advance. Identifiers and outcome-related fields are excluded from model inputs.
 - Preprocessing is fitted using the training portion of the data to reduce leakage risk. Where repeated participant identifiers exist, the evaluation workflow can use group-aware splitting.
@@ -35,7 +37,9 @@ The project also includes a local demonstration API, automated tests, and contai
 - Permutation importance illustrates model associations; it does not establish causal or clinical explanations.
 - Survival estimates are shown only when the required event/censoring information is available.
 
-**Interpretation:** Any predictions and performance scores generated from synthetic labels are demonstrations of software and statistical methods, not validated breast cancer predictions.
+**UCI benchmark methodology:** 80/20 stratified held-out test set; 5-fold stratified cross-validation on the training partition only; separate Random Forest pipeline. The positive class is malignant and the feature set contains 30 numerical cell-nucleus measurements. No individual diagnostic tool is exposed.
+
+**Interpretation:** Scores on synthetic labels or historical breast-mass measurements demonstrate statistical and engineering methods; neither establishes clinical validity or future cancer risk.
 
 ## Run locally
 
@@ -85,7 +89,7 @@ The provided Compose configuration binds the example services to the local machi
 
 ```text
 Dashboard.py          Streamlit application
-fde/                  Data loading, modeling, and model artifact utilities
+fde/                  Synthetic modeling, UCI diagnostic benchmark, artifact utilities
 api/                  Local FastAPI demonstration
 scripts/              Synthetic data generation and model training
 demo_data/            Synthetic example dataset
@@ -98,15 +102,16 @@ compose.yaml          Local multi-service configuration
 
 ## Current status and roadmap
 
-**Current status:** Development-stage educational portfolio application using synthetic datasets. Existing automated tests and Docker configuration support engineering demonstrations, but clinical validation and production security have not been established.
+**Current status:** Development-stage educational portfolio application offering synthetic demonstrations and a separate historical UCI Diagnostic research benchmark. Existing automated tests and Docker configuration support engineering demonstrations, but clinical validation and production security have not been established.
 
 **Planned enhancements:**
 
-- Add the UCI Breast Cancer Wisconsin (Diagnostic) dataset as a **separate benchmark workflow**, with a distinct feature schema and prediction objective.
 - Extend validation with repeated cross-validation, calibration assessment, and dataset-level documentation.
 - Improve model explanation, monitoring, continuous integration, and secure deployment practices.
 
-The UCI dataset is **not yet integrated** into the current application. A classifier trained on breast-mass measurements must not be confused with a model predicting the future risk of developing breast cancer.
+The UCI dataset is integrated only as a **historical research benchmark**. A classifier trained on breast-mass measurements must not be confused with a model predicting the future risk of developing breast cancer.
+
+**Attribution:** Wolberg, W., Mangasarian, O., Street, N., and Street, W. (1993), *Breast Cancer Wisconsin (Diagnostic)*, UCI Machine Learning Repository, DOI: 10.24432/C5DW2B, CC BY 4.0.
 
 ## Responsible use
 

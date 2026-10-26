@@ -16,6 +16,17 @@ from fde.modeling import train_evaluate, feature_importance, detect_anomalies
 
 
 st.set_page_config(page_title="Breast Cancer Analytics | FDE Portfolio", page_icon="🔬", layout="wide")
+st.sidebar.title("Dataset selection")
+dataset_mode = st.sidebar.radio(
+    "Dataset mode",
+    ["Synthetic demo", "UCI Wisconsin Diagnostic benchmark"],
+    help="The two modes use independent data schemas and independent evaluation workflows.",
+)
+if dataset_mode == "UCI Wisconsin Diagnostic benchmark":
+    from fde.uci_dashboard import render_uci_benchmark
+    render_uci_benchmark()
+    st.stop()
+
 st.title("🔬 Synthetic Breast Cancer Analytics")
 st.caption("End-to-end data engineering and ML demonstration • Synthetic data only • Not a clinical product")
 st.warning(
