@@ -1,97 +1,113 @@
-# Breast Cancer Analytics — FDE Portfolio Upgrade (Phase 1)
+# Breast Cancer Analytics & Machine Learning Platform
 
-**An educational, synthetic-data ML deployment demonstrating practical Forward Deployed Engineering.**
+**An educational data analytics and machine learning application demonstrating end-to-end software engineering, model evaluation, and deployment practices.**
 
-This is an upgraded version of the author's existing [Streamlit project](https://github.com/caesar1447/streamlit). It is a portfolio demonstration, **NOT a diagnostic tool**. The data supplied with this package is artificially generated. Its model scores do not demonstrate real-world clinical validity.
+> **Research and portfolio demonstration only.** This application is not a medical device and must not be used for diagnosis, clinical decision-making, or assessment of an individual's cancer risk. The currently bundled datasets are synthetic; reported performance on these datasets does not establish clinical validity.
 
-## What is included
+## Overview
 
-- Preserves three Streamlit pages: KPI Dashboard, Data Exploration, Predictive Modeling & Anomaly Detection.
-- Accepts **synthetic** CSV/XLSX files; falls back to the existing `Breast Cancer_Analysis_Dashboard.xlsx` if present, otherwise includes an explicitly labeled fake sample CSV.
-- Fixes leakage-prone preprocessing: splits data **before** fitting imputers/encoders, uses a predeclared pre-outcome feature allowlist, excludes participant identifiers, outcome and survival variables; uses group-aware splitting for repeated participant IDs.
-- Reports accuracy, balanced accuracy, precision, sensitivity, specificity, F1, ROC-AUC, majority-class baseline, and confusion matrix on held-out synthetic records.
-- Provides global held-out **permutation importance** (not a causal explanation).
-- Uses Isolation Forest to flag unusual feature patterns instead of equating low survival time with an anomaly.
-- Requires an actual censoring/event indicator (`Event_Observed`) before showing Kaplan–Meier estimates.
-- Adds a separate **demonstration-only FastAPI interface** (`/health`, `/model/info`, `/predict`), Docker, GitHub Actions CI, and automated tests.
+The platform combines an interactive Streamlit dashboard with modular Python data-processing and machine-learning components. It is designed to demonstrate practical data ingestion, exploratory analysis, classification workflows, anomaly detection, reproducibility, and engineering documentation.
 
-## Upgrade your existing GitHub repository safely
+The application currently includes three sections:
 
-1. **Create a new branch** (e.g. `portfolio-upgrade`) in [your repository](https://github.com/caesar1447/streamlit) or download a backup of the current version. Do **not** overwrite your currently deployed `main` until you have tested the new branch.
-2. Add the files in this package to the branch, retaining the current `Breast Cancer_Analysis_Dashboard.xlsx` in the root. `Dashboard.py` and `requirements.txt` **will replace** the older versions on the branch. The rest are new files.
-3. In a fresh Python 3.11 virtual environment, run `pip install -r requirements-dev.txt` and `python -m pytest -q`.
-4. Start with `streamlit run Dashboard.py` and explore all three sections. The old Excel file should be detected automatically; otherwise the bundled synthetic demonstration CSV will load.
-5. Evaluate how the old dataset differs from the included demonstration dataset; do not expect the old reported 99.42% score to persist after the leakage controls.
-6. Deploy the branch to a **second Streamlit Community Cloud app** first, with entry point `Dashboard.py`. Test using an incognito window. When satisfied, promote through your preferred GitHub workflow and repoint the existing app if desired.
+- **KPI Dashboard:** Explore record counts, missing values, categorical distributions, and time trends when relevant fields are available.
+- **Data Exploration:** Review descriptive statistics and visualize relationships in the dataset.
+- **Predictive Modeling & Anomaly Detection:** Train and evaluate a Random Forest classifier on appropriately structured **synthetic** data, inspect evaluation metrics and feature importance, and flag unusual feature patterns using Isolation Forest.
 
-## Local development
+The project also includes a local demonstration API, automated tests, and container configuration. These are engineering examples, not evidence of clinical approval or production security.
+
+## Technology
+
+- **Application:** Python, Streamlit
+- **Data processing:** pandas, NumPy
+- **Machine learning:** scikit-learn
+- **Visualization:** Matplotlib, Seaborn
+- **API (local demonstration):** FastAPI
+- **Engineering:** pytest, Docker, Git
+
+## Data and model methodology
+
+- The default data supplied with the project is **synthetically generated** for demonstration.
+- The dashboard accepts CSV and Excel uploads intended for **synthetic demonstration datasets only**. Do not upload identifiable patient records or sensitive health information.
+- For the synthetic classification task, selected predictors are declared in advance. Identifiers and outcome-related fields are excluded from model inputs.
+- Preprocessing is fitted using the training portion of the data to reduce leakage risk. Where repeated participant identifiers exist, the evaluation workflow can use group-aware splitting.
+- The application reports multiple holdout evaluation metrics, including accuracy, precision, sensitivity, specificity, F1, and ROC-AUC when applicable.
+- Permutation importance illustrates model associations; it does not establish causal or clinical explanations.
+- Survival estimates are shown only when the required event/censoring information is available.
+
+**Interpretation:** Any predictions and performance scores generated from synthetic labels are demonstrations of software and statistical methods, not validated breast cancer predictions.
+
+## Run locally
+
+Python 3.11 is recommended.
 
 ```bash
 python -m venv .venv
-# Windows PowerShell: .venv\Scripts\Activate.ps1
-# macOS/Linux: source .venv/bin/activate
-pip install -r requirements-dev.txt
+```
+
+Activate the virtual environment:
+
+- **Windows PowerShell:** `.venv\Scripts\Activate.ps1`
+- **macOS/Linux:** `source .venv/bin/activate`
+
+Install dependencies and launch the dashboard:
+
+```bash
+python -m pip install -r requirements-dev.txt
 python -m pytest -q
 streamlit run Dashboard.py
 ```
 
-## Optional: train and test the sample API
+The dashboard should open locally at `http://localhost:8501`.
 
-Training is an explicit command (not run automatically on uploads). It writes a **trusted local pickle-based** joblib artifact. Never load artifacts from untrusted uploaders.
+### Optional local API demonstration
+
+Train a demonstration model using the bundled synthetic dataset, then start the FastAPI service:
 
 ```bash
 python -m scripts.train_model
 uvicorn api.main:app --reload
 ```
 
-Then visit `http://127.0.0.1:8000/docs` to see the request format. `GET /model/info` returns the precise expected feature names; `POST /predict` requires exactly those features. It responds only with a **synthetic-label probability**, not a diagnosis or personal medical risk.
+API documentation is available locally at `http://127.0.0.1:8000/docs`. The API includes `/health`, `/model/info`, and `/predict`. It is **not authenticated or approved for public exposure**. Use synthetic example inputs only, and load model artifacts solely from trusted sources.
 
-Example for bundled demo data (do not submit actual patient data):
+### Optional Docker demonstration
 
-```json
-{
-  "features": {
-    "Age": 43,
-    "BRCA_Status": "Negative",
-    "Family_History": "No History",
-    "Smoking_Status": "Never Smoked",
-    "Alcohol_Consumption": "Light",
-    "BMI": 26.5,
-    "Physical_Activity": "Moderate"
-  }
-}
-```
-
-### Docker
+After training the local model, run:
 
 ```bash
-python -m scripts.train_model
-# Docker Desktop must be running
 docker compose up --build
 ```
 
-Local dashboard: `http://127.0.0.1:8501`; local-only API documentation: `http://127.0.0.1:8000/docs`. **Do not publish the demo API** without authentication, rate limiting, threat modeling and a privacy review. Docker packaging and local CI are *production-style engineering demonstrations*, not proof of production security.
+The provided Compose configuration binds the example services to the local machine. Deployment to an internet-facing environment would require a separate security and privacy review.
 
-## Model assumptions and limitations
+## Repository layout
 
-- The included sample file was generated by `python -m scripts.generate_demo` using a **fabricated stochastic formula**. Labels have no medical interpretation.
-- Only declared pre-outcome columns are model inputs. Gender and Ethnicity are retained for exploration but excluded from the classifier by default. Bias and fairness require specialist review before any real-world application.
-- Results are from a single holdout split. Confidence intervals, independent cohorts, external validation and calibration remain future work.
-- A high accuracy on a synthetic dataset can be completely misleading. **Do not claim medical sensitivity or diagnostic validity.**
-- Model feature importance is associative and can be affected by correlated columns; it does not explain causation.
-- The default app does not persist uploaded files to disk; it is still **not designed to process protected health information**. Do not upload identifiable records.
+```text
+Dashboard.py          Streamlit application
+fde/                  Data loading, modeling, and model artifact utilities
+api/                  Local FastAPI demonstration
+scripts/              Synthetic data generation and model training
+demo_data/            Synthetic example dataset
+tests/                Automated tests
+docs/                 Architecture, model, and security documentation
+requirements*.txt     Python dependencies
+Dockerfile*           Container configuration
+compose.yaml          Local multi-service configuration
+```
 
-## Portfolio demonstration narrative
+## Current status and roadmap
 
-> I converted a single-file Streamlit analytics application into a modular, reproducible synthetic-data ML demonstration. I added train/test-safe preprocessing, explicit feature governance, multi-metric evaluation, model explainability, anomaly detection, a demonstration inference API, container configuration, automated tests, CI and deployment guidance. I documented privacy restrictions and the difference between synthetic ML metrics and clinical validation.
+**Current status:** Development-stage educational portfolio application using synthetic datasets. Existing automated tests and Docker configuration support engineering demonstrations, but clinical validation and production security have not been established.
 
-## Roadmap
+**Planned enhancements:**
 
-**Phase 2 — after verifying this build on your original synthetic workbook:**
+- Add the UCI Breast Cancer Wisconsin (Diagnostic) dataset as a **separate benchmark workflow**, with a distinct feature schema and prediction objective.
+- Extend validation with repeated cross-validation, calibration assessment, and dataset-level documentation.
+- Improve model explanation, monitoring, continuous integration, and secure deployment practices.
 
-- Select relevant fairness audits and identify duplicate/near-duplicate synthetic records.
-- Add calibration assessment, repeated cross-validation, model registry / version tracking and documentation of experimental results.
-- Evaluate SHAP explanations on the held-out cohort (after addressing the technical and ethical limits of interpretation).
-- Add authenticated API patterns, structured monitoring and robust dependency/security scanning.
+The UCI dataset is **not yet integrated** into the current application. A classifier trained on breast-mass measurements must not be confused with a model predicting the future risk of developing breast cancer.
 
-**Project 2:** Electrical equipment predictive maintenance, informed by power-distribution operational experience, industrial telemetry, and simulated failure events. Start only after the breast cancer upgrade is validated and deployed.
+## Responsible use
+
+This is a research, learning, and engineering portfolio project. It is not intended for patient care. Do not submit personally identifiable health information to the public demonstration. See [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) and [`docs/SECURITY.md`](docs/SECURITY.md) for additional assumptions and limitations.
