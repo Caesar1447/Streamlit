@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import platform
+from api.monitoring import install_request_monitoring
 from functools import lru_cache
 from pathlib import Path
 
@@ -33,6 +34,8 @@ app = FastAPI(
         "only. Do not submit personal or identifiable medical data."
     ),
 )
+install_request_monitoring(app)
+
 DEFAULT_MODEL_PATH = Path(__file__).resolve().parents[1] / "models" / "demo_model.joblib"
 UCI_SOURCE = "https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic"
 UCI_DOI = "10.24432/C5DW2B"
