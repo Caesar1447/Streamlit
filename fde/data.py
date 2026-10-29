@@ -7,6 +7,9 @@ import pandas as pd
 
 DEFAULT_XLSX = "Breast Cancer_Analysis_Dashboard.xlsx"
 DEFAULT_DEMO = Path(__file__).resolve().parents[1] / "demo_data" / "synthetic_demo.csv"
+
+DEFAULT_REVIEWED_CSV = Path("demo_data") / "Breast_Cancer_Synthetic_Reviewed.csv"
+
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # demonstration limit; hosting config may impose a lower limit
 MAX_ROWS = 200_000
 
@@ -32,10 +35,14 @@ def read_dataset(file_bytes: bytes | None = None, filename: str | None = None,
             df = pd.read_excel(xl, sheet_name=sheet)
         else:
             raise ValueError("Only .csv and .xlsx files are supported.")
+    
+    elif (root / DEFAULT_REVIEWED_CSV).is_file():
+        df = pd.read_csv(root / DEFAULT_REVIEWED_CSV)
     elif (root / DEFAULT_XLSX).exists():
         df = pd.read_excel(root / DEFAULT_XLSX, sheet_name="Dataset")
     else:
         df = pd.read_csv(root / "demo_data" / "synthetic_demo.csv")
+
 
     if df.empty:
         raise ValueError("Dataset is empty.")
@@ -50,6 +57,10 @@ def describe_source(file_bytes: bytes | None, root: Path | None = None) -> str:
     root = root or Path(__file__).resolve().parents[1]
     if file_bytes is not None:
         return "Uploaded dataset — use synthetic or fully non-identifiable records only"
+      
+    if (root / DEFAULT_REVIEWED_CSV).is_file():
+        return "Repository reviewed synthetic dataset (educational demonstration)"
+
     if (root / DEFAULT_XLSX).exists():
         return "Repository Excel dataset (user-confirmed synthetic)"
     return "Bundled demonstration dataset (synthetic)"
