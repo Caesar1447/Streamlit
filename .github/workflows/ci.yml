@@ -1,19 +1,29 @@
+
 name: portfolio-ci
+
 on:
   push:
   pull_request:
+
 jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
+
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
+
       - name: Verify syntax
         run: python -m compileall -q Dashboard.py fde api scripts tests
+
       - name: Run tests
         run: python -m pytest -q
+
+      - name: Validate reviewed synthetic dataset
+        run: python scripts/validate_public_dataset.py demo_data/Breast_Cancer_Synthetic_Reviewed.csv
