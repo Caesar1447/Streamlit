@@ -95,6 +95,7 @@ elif page == "📈 Data Exploration":
     st.subheader("Descriptive statistics")
     st.dataframe(df.describe(include="all").transpose().fillna(""), use_container_width=True)
     numeric = numeric_fields(df)
+    numeric = [col for col in numeric if col != "Participant_ID"]
     if numeric:
         with st.expander("Correlation heatmap", expanded=True):
             # Prevent a giant unreadable chart on wide schemas.
@@ -109,14 +110,22 @@ elif page == "📈 Data Exploration":
         a, b = st.columns(2)
         with a:
             st.subheader("Histogram")
-            chosen = st.selectbox("Numeric variable", numeric, key="hist")
+            chosen = st.selectbox(
+                "Numeric variable", numeric,
+                index=numeric.index("Age") if "Age" in numeric else 0,
+                key="hist"
+            )
             fig, ax = plt.subplots(figsize=(6, 4))
             sns.histplot(pd.to_numeric(df[chosen], errors="coerce").dropna(), bins=24, ax=ax)
             st.pyplot(fig)
             plt.close(fig)
         with b:
             st.subheader("Box plot")
-            chosen_box = st.selectbox("Numeric variable", numeric, key="box")
+            chosen_box = st.selectbox(
+                "Numeric variable", numeric,
+                index=numeric.index("Age") if "Age" in numeric else 0,
+                key="box"
+            )
             fig, ax = plt.subplots(figsize=(6, 4))
             sns.boxplot(y=pd.to_numeric(df[chosen_box], errors="coerce"), ax=ax)
             st.pyplot(fig)
