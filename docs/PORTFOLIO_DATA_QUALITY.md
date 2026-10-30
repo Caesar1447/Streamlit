@@ -9,10 +9,12 @@
 
 The reviewed cohort derives from a historical **synthetic** breast cancer analysis workbook. It is not a real patient cohort. The original workbook predates the FDE v2 work; its medical values were artificially generated and have **not** been independently validated for clinical plausibility, demographic realism, subgroup fairness, or causal interpretation.
 
-There are two distinct demonstration datasets:
+There are two repository-level synthetic data files with different roles:
 
-- `demo_data/synthetic_demo.csv`: the separate synthetic demo input used by the Streamlit application. **Do not silently replace its source with the reviewed dataset.**
-- `demo_data/Breast_Cancer_Synthetic_Reviewed.csv`: the corrected 12,000-row dataset analyzed in this audit.
+- `demo_data/Breast_Cancer_Synthetic_Reviewed.csv`: **the current default** dataset for the Streamlit application's **Synthetic demo** mode, following the October 2026 `fde/data.py` update. This is the corrected 12,000-row dataset analyzed here.
+- `demo_data/synthetic_demo.csv`: the **original bundled fallback example**, used only when the preferred reviewed CSV and the historical Excel workbook are unavailable and no uploaded dataset is supplied.
+
+The loader accepts a user-supplied demonstration CSV/XLSX first; otherwise it selects the reviewed CSV, followed by the historical Excel workbook, then the bundled fallback example. The UCI mode is selected separately and does not use these synthetic files.
 
 The **UCI Breast Cancer Wisconsin (Diagnostic)** dataset is a *separate real, historical research benchmark* with 569 samples and 30 features. Its modeling metrics must not be attributed to either synthetic dataset. See the [official dataset page](https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic).
 
@@ -66,7 +68,7 @@ The script checks field names and order, 12,000 rows, unique participant IDs, ex
 
 A manual Excel check confirmed that changing a diagnosis label recalculates the KPI. After inspection, the changed label should be restored so that the released values remain unchanged. Excel automatic calculation must be enabled; additions need to be inside the expanding table. This demonstrates spreadsheet engineering, not clinical accuracy.
 
-`Breast Cancer_Analysis_Dashboard.xlsx` is the *historical original*. Its KPI snapshots are not automatically recalculating. Older commits can continue to expose its original file contents and document metadata even after a file is replaced or deleted; historical repository hygiene is a separate security issue.
+`Breast Cancer_Analysis_Dashboard.xlsx` is the *historical original*. Its KPI snapshots are not automatically recalculating. It is retained as a legacy fallback, not the current default synthetic data source. Older commits can continue to expose its original file contents and document metadata even after a file is replaced or deleted; historical repository hygiene is a separate security issue.
 
 ## Limitations and responsible claims
 
